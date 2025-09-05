@@ -7,15 +7,29 @@ interface ICard {
   suit: Suit;
 }
 
+// Functional factory for creating card objects
+const createCard = (rank: Rank, suit: Suit): ICard => {
+  const cardToString = (): string => 'card-' + rank.value + ' of ' + suit.label;
+  
+  return {
+    id: cardToString(),
+    rank,
+    suit,
+  };
+};
+
 export class Card implements ICard {
   public readonly id: string;
   public readonly rank: Rank;
   public readonly suit: Suit;
 
   constructor(rank: Rank, suit: Suit) {
-    this.rank = rank;
-    this.suit = suit;
-    this.id = this.toString();
+    // Use functional factory internally
+    const card = createCard(rank, suit);
+    
+    this.rank = card.rank;
+    this.suit = card.suit;
+    this.id = card.id;
   }
 
   getRank(): Rank {
@@ -30,6 +44,27 @@ export class Card implements ICard {
     return 'card-' + this.rank.value + ' of ' + this.suit.label;
   }
 }
+
+// Functional factory for creating ABCard objects
+const createABCard = (
+  rank: Rank | null | undefined,
+  suit: Suit | null | undefined,
+  faceUp: boolean = true,
+  played: boolean = false,
+  discard: boolean = false
+) => {
+  const actualRank = rank ?? Rank.getRandom();
+  const actualSuit = suit ?? Suit.getRandom();
+  const card = createCard(actualRank, actualSuit);
+  
+  return {
+    ...card,
+    played,
+    discard,
+    faceUp,
+    _toString: () => 'card-' + actualRank.value + ' of ' + actualSuit.label,
+  };
+};
 
 export class ABCard extends Card {
   public played: boolean = false;
@@ -63,6 +98,14 @@ export class ABCard extends Card {
     return this.toString(); // Use the inherited toString method
   }
 }
+
+// Functional factory for ABCardPreview
+const createABCardPreview = (rank?: Rank, suit?: Suit) => {
+  const actualRank = rank ?? Rank.getRandom();
+  const actualSuit = suit ?? Suit.getRandom();
+  
+  return createABCard(actualRank, actualSuit, true, false, false);
+};
 
 export class ABCardPreview extends ABCard {
   declare public rank: Rank;
